@@ -1,0 +1,40 @@
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "com.bmuschko:gradle-tomcat-plugin:2.5"
+    }
+}
+
+apply plugin: 'groovy'
+apply plugin: 'war'
+apply plugin: 'com.bmuschko.tomcat'
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    compile 'restling:restling-core:0.0.7'
+    def tomcatVersion = '8.5.16'
+    tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
+            "org.apache.tomcat.embed:tomcat-embed-logging-juli:8.5.2",
+            "org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}"
+    testCompile 'junit:junit:4.12'
+}
+war {
+    from 'src/main/webapp'
+    webInf { from 'src/main/webapp/WEB-INF' }
+    webXml = file('src/main/webapp/WEB-INF/web.xml')
+}
+tomcat {
+    httpProtocol = 'org.apache.coyote.http11.Http11Nio2Protocol'
+    ajpProtocol  = 'org.apache.coyote.ajp.AjpNio2Protocol'
+}
+
+// context where tomcat is deployed, by default localhost:8080/
+tomcatRun.contextPath = '/'
+tomcatRunWar.contextPath = '/'
