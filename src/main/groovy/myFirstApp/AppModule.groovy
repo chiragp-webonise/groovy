@@ -1,6 +1,12 @@
 package myFirstApp
 
-import com.google.inject.name.Names
+
+import com.todo.service.ConnectionI
+import com.todo.dao.TaskDaoI
+import com.todo.dao.impl.TaskDaoImpl
+import com.todo.service.TaskServicesI
+import com.todo.service.impl.ConnectionServiceImpl
+import com.todo.service.impl.TaskServiceImpl
 import groovy.transform.CompileStatic
 import restling.guice.modules.RestlingApplicationModule
 
@@ -9,5 +15,9 @@ class AppModule extends RestlingApplicationModule{
     Class<MyAppRouter> routerClass = MyAppRouter
 
     @Override
-    void configureCustomBindings() {}
+    void configureCustomBindings() {
+        bind(ConnectionI).to(ConnectionServiceImpl)
+        bind(TaskDaoI).to(TaskDaoImpl)
+        bind(TaskServicesI).to(TaskServiceImpl)
+    }
 }

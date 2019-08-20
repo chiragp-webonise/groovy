@@ -12,5 +12,9 @@ class MyAppRouter extends RestlingRouter{
     @Override
     void init() {
         attach("/ping", Ping)
+        attach("/tasks/view",TaskController)
+        attach("/task/create",TaskController)
+        attach("/task/edit/{id}",TaskController)
+        attach("/task/remove/{id}",TaskController)
     }
 }

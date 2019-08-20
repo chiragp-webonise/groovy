@@ -2,17 +2,29 @@
 buildscript {
     repositories {
         jcenter()
+        mavenLocal()
+        mavenCentral()
     }
     dependencies {
         classpath "com.bmuschko:gradle-tomcat-plugin:2.5"
+        classpath 'org.liquibase:liquibase-core:3.4.1'
+        classpath "org.liquibase:liquibase-gradle-plugin:1.1.1"
+        classpath 'mysql:mysql-connector-java:5.1.13'
+        classpath 'org.jooq:jooq-codegen:3.11.11'
+        classpath 'com.h2database:h2:1.4.177'
     }
 }
 
 apply plugin: 'groovy'
 apply plugin: 'war'
 apply plugin: 'com.bmuschko.tomcat'
+apply plugin: 'liquibase'
+apply plugin: 'java'
+
+def changeLog = "/home/webonise/chirag/groovy/src/main/db/changelog.xml"
 
 repositories {
+    mavenLocal()
     mavenCentral()
     jcenter()
 }
@@ -24,6 +36,9 @@ dependencies {
             "org.apache.tomcat.embed:tomcat-embed-logging-juli:8.5.2",
             "org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}"
     testCompile 'junit:junit:4.12'
+    compile 'org.jooq:jooq:3.11.11'
+
+    runtime 'mysql:mysql-connector-java:5.1.13'
 }
 war {
     from 'src/main/webapp'
@@ -38,3 +53,49 @@ tomcat {
 // context where tomcat is deployed, by default localhost:8080/
 tomcatRun.contextPath = '/'
 tomcatRunWar.contextPath = '/'
+
+task('dev'){
+    println "executing dev"
+
+    liquibase {
+        activities {
+            main {
+                changeLogFile changeLog
+                url 'jdbc:mysql://localhost:3306/todo?createDatabaseIfNotExist=true&&useUnicode=true&characterEncoding=utf8'
+                username 'root'
+                password 'root'
+            }
+        }
+    }
+}
+
+def writer = new StringWriter()
+def xml = new groovy.xml.MarkupBuilder(writer)
+        .configuration('xmlns': 'http://www.jooq.org/xsd/jooq-codegen-3.11.0.xsd') {
+            jdbc() {
+                driver('com.mysql.jdbc.Driver')
+                url('jdbc:mysql://localhost:3306/todo')
+                user('root')
+                password('root')
+            }
+            generator() {
+                database() {
+                    inputSchema("${targetDatabaseName}")
+                }
+
+                generate([:]) {
+                    pojos true
+                    daos true
+                }
+                target() {
+                    packageName("${jooqTargetPackageName}")
+                    directory("${jooqTargetDirectory}")
+                }
+            }
+        }
+
+// Run the code generator
+// ----------------------
+task('generate'){
+    org.jooq.codegen.GenerationTool.generate(writer.toString())
+}
