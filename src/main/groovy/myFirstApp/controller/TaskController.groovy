@@ -1,6 +1,6 @@
-package myFirstApp
+package myFirstApp.controller
 
-import com.todo.service.ConnectionI
+
 import com.todo.service.TaskServicesI
 import org.restlet.resource.Delete
 import org.restlet.resource.Get
@@ -11,39 +11,38 @@ import com.todo.db.sql.tables.pojos.*
 
 import com.google.inject.Inject
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class TaskController extends ServerResource{
 
-    private final ConnectionI connService
     private final TaskServicesI taskServices
 
     @Inject
-    TaskController(ConnectionI connService, TaskServicesI taskServices){
-        this.connService=connService
+    TaskController(TaskServicesI taskServices){
         this.taskServices=taskServices
     }
 
     @Post
     void doPost(Task t) {
-
-        println("HERE"+t.description)
-        taskServices.insertTaskService(connService.getConnection(),t)
+        taskServices.insertTaskService(t)
     }
 
     @Put
     void doPut(Task t){
         t.id=(getAttribute("id") as int)
-        taskServices.updateTaskService(connService.getConnection(),t)
+        taskServices.updateTaskService(t)
     }
 
     @Get
     String doGet() {
-        return taskServices.readTaskService(connService.getConnection())
+        return taskServices.readTaskService()
     }
 
     @Delete
     void doDelete(){
         Task t=new Task()
         t.setId((getAttribute("id") as int))
-        taskServices.deleteTaskService(connService.getConnection(),t)
+        taskServices.deleteTaskService(t)
     }
 }

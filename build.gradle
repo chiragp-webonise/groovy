@@ -6,7 +6,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "com.bmuschko:gradle-tomcat-plugin:2.5"
+        classpath 'org.akhikhl.gretty:gretty:1.4.0'
         classpath 'org.liquibase:liquibase-core:3.4.1'
         classpath "org.liquibase:liquibase-gradle-plugin:1.1.1"
         classpath 'mysql:mysql-connector-java:5.1.13'
@@ -17,9 +17,9 @@ buildscript {
 
 apply plugin: 'groovy'
 apply plugin: 'war'
-apply plugin: 'com.bmuschko.tomcat'
 apply plugin: 'liquibase'
 apply plugin: 'java'
+apply plugin: 'org.akhikhl.gretty'
 
 def changeLog = "/home/webonise/chirag/groovy/src/main/db/changelog.xml"
 
@@ -31,11 +31,15 @@ repositories {
 
 dependencies {
     compile 'restling:restling-core:0.0.7'
-    def tomcatVersion = '8.5.16'
-    tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
-            "org.apache.tomcat.embed:tomcat-embed-logging-juli:8.5.2",
-            "org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}"
+
+    def tomcatVersion = "8.0.26"
+    grettyRunnerTomcat8 "com.zaxxer:HikariCP:2.4.0"
+    grettyRunnerTomcat8 "mysql:mysql-connector-java:5.1.39"
+    grettyRunnerTomcat8 "org.apache.tomcat:tomcat-api:$tomcatVersion"
+    grettyRunnerTomcat8 "org.apache.tomcat:tomcat-jdbc:$tomcatVersion"
+    grettyRunnerTomcat8 "org.apache.tomcat:tomcat-dbcp:$tomcatVersion"
     testCompile 'junit:junit:4.12'
+    testCompile 'org.apache.tomcat:tomcat-catalina:9.0.0.M3'
     compile 'org.jooq:jooq:3.11.11'
 
     runtime 'mysql:mysql-connector-java:5.1.13'
@@ -45,23 +49,25 @@ war {
     webInf { from 'src/main/webapp/WEB-INF' }
     webXml = file('src/main/webapp/WEB-INF/web.xml')
 }
-tomcat {
-    httpProtocol = 'org.apache.coyote.http11.Http11Nio2Protocol'
-    ajpProtocol  = 'org.apache.coyote.ajp.AjpNio2Protocol'
+
+
+gretty {
+    systemProperties = System.properties
+    servletContainer = 'tomcat8'
+    contextPath = ""
+    serverConfigFile = "/home/webonise/chirag/groovy/server.xml"
+    jvmArgs = ['-Djava.naming.factory.initial=org.apache.naming.java.javaURLContextFactory', '-Djava.naming.factory.url.pkgs=org.apache.naming']
+    managedClassReload = true
 }
 
-// context where tomcat is deployed, by default localhost:8080/
-tomcatRun.contextPath = '/'
-tomcatRunWar.contextPath = '/'
+
 
 task('dev'){
-    println "executing dev"
-
     liquibase {
         activities {
             main {
                 changeLogFile changeLog
-                url 'jdbc:mysql://localhost:3306/todo?createDatabaseIfNotExist=true&&useUnicode=true&characterEncoding=utf8'
+                url "${databaseUrl}"
                 username 'root'
                 password 'root'
             }
@@ -74,7 +80,7 @@ def xml = new groovy.xml.MarkupBuilder(writer)
         .configuration('xmlns': 'http://www.jooq.org/xsd/jooq-codegen-3.11.0.xsd') {
             jdbc() {
                 driver('com.mysql.jdbc.Driver')
-                url('jdbc:mysql://localhost:3306/todo')
+                url("${jooqDatabaseUrl}")
                 user('root')
                 password('root')
             }

@@ -6,6 +6,7 @@
     <servlet>
         <servlet-name>restlet</servlet-name>
         <servlet-class>restling.RestlingServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
         <init-param>
             <param-name>guice-module</param-name>
             <param-value>myFirstApp.AppModule</param-value>

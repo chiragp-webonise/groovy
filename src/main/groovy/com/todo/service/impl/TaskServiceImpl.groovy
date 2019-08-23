@@ -9,30 +9,30 @@ import java.sql.Connection
 
 class TaskServiceImpl implements TaskServicesI {
 
-    private final TaskDaoI TaskService
+    private final TaskDaoI taskService
 
     @Inject
-    TaskServiceImpl(TaskDaoI TaskService){
-        this.TaskService=TaskService
+    TaskServiceImpl(TaskDaoI taskService){
+        this.taskService=taskService
     }
 
     @Override
-    void insertTaskService(Connection c, Task t) {
-        TaskService.InsertTask(c,t)
+    void insertTaskService(Task t) {
+        taskService.insertTask(t)
     }
 
     @Override
-    void updateTaskService(Connection c, Task t) {
-        TaskService.UpdateTask(c,t)
+    void updateTaskService(Task t) {
+        taskService.updateTask(t)
     }
 
     @Override
-    void deleteTaskService(Connection c, Task t) {
-        TaskService.DeleteTask(c,t)
+    void deleteTaskService(Task t) {
+        taskService.deleteTask(t)
     }
 
     @Override
-    String readTaskService(Connection c) {
-        return TaskService.ReadTask(c)
+    String readTaskService() {
+        return taskService.readTask()
     }
 }

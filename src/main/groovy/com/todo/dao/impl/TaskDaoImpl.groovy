@@ -4,31 +4,41 @@ import com.todo.dao.TaskDaoI
 import org.jooq.impl.DSL
 import java.sql.Connection
 import com.todo.db.sql.tables.pojos.Task;
+import org.jooq.DSLContext
+import com.google.inject.Inject
+import groovy.transform.CompileStatic
+
 
 class TaskDaoImpl implements TaskDaoI {
+    final DSLContext dslContext
 
-    @Override
-    void InsertTask(Connection c, Task t) {
-        DSL.using(c).newRecord(com.todo.db.sql.tables.Task.TASK,t).store()
+    @Inject
+    TaskDaoImpl(DSLContext dslContext) {
+        this.dslContext = dslContext
     }
 
     @Override
-    void UpdateTask(Connection c, Task t) {
+    void insertTask(Task t) {
+        dslContext.newRecord(com.todo.db.sql.tables.Task.TASK,t).store()
+    }
+
+    @Override
+    void updateTask(Task t) {
         def task=com.todo.db.sql.tables.Task.TASK
-        DSL.using(c).update(task)
+        dslContext.update(task)
                 .set(task.DESCRIPTION,t.description)
                 .where(task.ID.eq(t.id))
                 .execute()
     }
 
     @Override
-    void DeleteTask(Connection c, Task t) {
+    void deleteTask(Task t) {
         def task=com.todo.db.sql.tables.Task.TASK
-        DSL.using(c).delete(task).where(task.ID.eq(t.id)).execute()
+        dslContext.delete(task).where(task.ID.eq(t.id)).execute()
     }
 
     @Override
-    String ReadTask(Connection c) {
-         return DSL.using(c).selectFrom("task").fetch().format()
+    String readTask() {
+         return dslContext.selectFrom("task").fetch().format()
     }
 }
