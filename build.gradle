@@ -1,0 +1,107 @@
+
+buildscript {
+    repositories {
+        jcenter()
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.akhikhl.gretty:gretty:1.4.0'
+        classpath 'org.liquibase:liquibase-core:3.4.1'
+        classpath "org.liquibase:liquibase-gradle-plugin:1.1.1"
+        classpath 'mysql:mysql-connector-java:5.1.13'
+        classpath 'org.jooq:jooq-codegen:3.11.11'
+        classpath 'com.h2database:h2:1.4.177'
+    }
+}
+
+apply plugin: 'groovy'
+apply plugin: 'war'
+apply plugin: 'liquibase'
+apply plugin: 'java'
+apply plugin: 'org.akhikhl.gretty'
+
+def changeLog = "${projectDir}/groovy/src/main/db/changelog.xml"
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    compile 'restling:restling-core:0.0.7'
+
+    def tomcatVersion = "8.0.26"
+    grettyRunnerTomcat8 "com.zaxxer:HikariCP:2.4.0"
+    grettyRunnerTomcat8 "mysql:mysql-connector-java:5.1.39"
+    grettyRunnerTomcat8 "org.apache.tomcat:tomcat-api:$tomcatVersion"
+    grettyRunnerTomcat8 "org.apache.tomcat:tomcat-jdbc:$tomcatVersion"
+    grettyRunnerTomcat8 "org.apache.tomcat:tomcat-dbcp:$tomcatVersion"
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.apache.tomcat:tomcat-catalina:9.0.0.M3'
+    compile 'org.jooq:jooq:3.11.11'
+
+    runtime 'mysql:mysql-connector-java:5.1.13'
+}
+war {
+    from 'src/main/webapp'
+    webInf { from 'src/main/webapp/WEB-INF' }
+    webXml = file('src/main/webapp/WEB-INF/web.xml')
+}
+
+
+gretty {
+    systemProperties = System.properties
+    servletContainer = 'tomcat8'
+    contextPath = ""
+    serverConfigFile = "${projectDir}/server.xml"
+    jvmArgs = ['-Djava.naming.factory.initial=org.apache.naming.java.javaURLContextFactory', '-Djava.naming.factory.url.pkgs=org.apache.naming']
+    managedClassReload = true
+}
+
+
+
+task('dev'){
+    liquibase {
+        activities {
+            main {
+                changeLogFile changeLog
+                url "${databaseUrl}"
+                username "${dbUsername}"
+                password "${dbPassword}"
+            }
+        }
+    }
+}
+
+def writer = new StringWriter()
+def xml = new groovy.xml.MarkupBuilder(writer)
+        .configuration('xmlns': 'http://www.jooq.org/xsd/jooq-codegen-3.11.0.xsd') {
+            jdbc() {
+                driver('com.mysql.jdbc.Driver')
+                url("${jooqDatabaseUrl}")
+                user("${dbUsername}")
+                password("${dbPassword}")
+            }
+            generator() {
+                database() {
+                    inputSchema("${targetDatabaseName}")
+                }
+
+                generate([:]) {
+                    pojos true
+                    daos true
+                }
+                target() {
+                    packageName("${jooqTargetPackageName}")
+                    directory("${jooqTargetDirectory}")
+                }
+            }
+        }
+
+// Run the code generator
+// ----------------------
+task('generate'){
+    org.jooq.codegen.GenerationTool.generate(writer.toString())
+}
