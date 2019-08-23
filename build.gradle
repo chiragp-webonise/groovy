@@ -21,7 +21,7 @@ apply plugin: 'liquibase'
 apply plugin: 'java'
 apply plugin: 'org.akhikhl.gretty'
 
-def changeLog = "/home/webonise/chirag/groovy/src/main/db/changelog.xml"
+def changeLog = "${projectDir}/groovy/src/main/db/changelog.xml"
 
 repositories {
     mavenLocal()
@@ -55,7 +55,7 @@ gretty {
     systemProperties = System.properties
     servletContainer = 'tomcat8'
     contextPath = ""
-    serverConfigFile = "/home/webonise/chirag/groovy/server.xml"
+    serverConfigFile = "${projectDir}/server.xml"
     jvmArgs = ['-Djava.naming.factory.initial=org.apache.naming.java.javaURLContextFactory', '-Djava.naming.factory.url.pkgs=org.apache.naming']
     managedClassReload = true
 }
@@ -68,8 +68,8 @@ task('dev'){
             main {
                 changeLogFile changeLog
                 url "${databaseUrl}"
-                username 'root'
-                password 'root'
+                username "${dbUsername}"
+                password "${dbPassword}"
             }
         }
     }
@@ -81,8 +81,8 @@ def xml = new groovy.xml.MarkupBuilder(writer)
             jdbc() {
                 driver('com.mysql.jdbc.Driver')
                 url("${jooqDatabaseUrl}")
-                user('root')
-                password('root')
+                user("${dbUsername}")
+                password("${dbPassword}")
             }
             generator() {
                 database() {

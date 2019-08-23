@@ -16,7 +16,6 @@ class AppModule extends RestlingApplicationModule{
 
     @Override
     void configureCustomBindings() {
-//        bind(ConnectionI).to(ConnectionServiceImpl)
         install(new DataAccessModule())
         bind(TaskDaoI).to(TaskDaoImpl)
         bind(TaskServicesI).to(TaskServiceImpl)
